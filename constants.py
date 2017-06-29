@@ -7,8 +7,8 @@ HOST_CONFIG = '127.0.0.1'
 TABLE_TEMPLATE = dict()
 TABLE_TEMPLATE['Directory'] = (
     "CREATE TABLE Directory ("
-    "  CustomerName VARCHAR(40) NOT NULL,"
-    "  Subdomain VARCHAR(100) NOT NULL,"
+    "  CustomerName VARCHAR(100) NOT NULL,"
+    "  Subdomain VARCHAR(120) NOT NULL,"
     "  Valid BOOLEAN NOT NULL,"
     "  PRIMARY KEY (Subdomain)"
     ");"
@@ -18,7 +18,7 @@ TABLE_TEMPLATE['Metadata'] = (
     "  Id INTEGER(11) NOT NULL AUTO_INCREMENT,"
     "  ToDate DATE NOT NULL,"      # Please see that "To_Date" is different from the excel field "To"
     "  InternalUsers INTEGER(11) NOT NULL,"
-    "  Subdomain VARCHAR(100) NOT NULL,"
+    "  Subdomain VARCHAR(120) NOT NULL,"
     "  PRIMARY KEY (Id)"
     ");"
 )
