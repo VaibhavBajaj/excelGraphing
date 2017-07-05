@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <title>Users</title>
+        <script type="text/javascript">
+            window.onload = function() {
+                var tbody = document.getElementById('tbody');
+                var dataList = {{dataList | safe}};
+
+                for (var i = 0; i < dataList.length; i++) {
+                    var data = dataList[i];
+
+                    var rowHTML = "<tr>";
+                    rowHTML += "<td align=\"center\">"
+                    rowHTML += "<a href=" + data[3] + ">" + data[0] + "</a>";
+                    rowHTML += "</td>";
+                    rowHTML += "<td align=\"center\">";
+                    rowHTML += "<a href=" + data[1] + ">" + data[1] + "</a>";
+                    rowHTML += "</td>";
+                    rowHTML += "<td align=\"center\">";
+                    rowHTML += data[2]
+                    rowHTML += "</td>";
+                    rowHTML += "</tr>";
+
+                    tbody.innerHTML += rowHTML;
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <table border="1" align="center">
+            <thead>
+                <tr>
+                    <th align="center">Company Name</th>
+                    <th align="center">Subdomain</th>
+                    <th align="center">Internal Users</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </body>
+</html>

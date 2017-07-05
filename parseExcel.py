@@ -1,11 +1,13 @@
 import csv
-import mysql.connector
-from constants import config
-from constants import TABLE_TEMPLATE
-from constants import COMMANDS
-from secretConstants import EXCEL_PATH
-from mysql.connector import errorcode
 from datetime import datetime
+
+import mysql.connector
+from mysql.connector import errorcode
+
+from constants import COMMANDS
+from constants import TABLE_TEMPLATE
+from constants import config
+from secretConstants import EXCEL_PATH
 
 
 def create_table():
@@ -66,7 +68,6 @@ else:
             dictCollection = csv.DictReader(weeklyInsight)
 
             for dictElement in dictCollection:
-
                 # Fields needed
                 toDate = extract_element(dictElement, 'To', num)
                 internalUsers = extract_element(dictElement, 'InternalUsers', num)
@@ -77,6 +78,9 @@ else:
                 # If any of the fields is returned False, break out of this file.
                 if not (toDate and internalUsers and subdomain and customerName):
                     break
+
+                if (customerName == 'Excelacom'):
+                    print (EXCEL_PATH.format(num))
 
                 # Changing date to %Y-%m-%d format
                 toDate = parse_date(toDate)

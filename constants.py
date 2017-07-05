@@ -1,5 +1,5 @@
-from secretConstants import PASSWORD
 from secretConstants import DB_NAME
+from secretConstants import PASSWORD
 
 USERNAME = 'root'
 HOST_CONFIG = '127.0.0.1'
@@ -24,6 +24,9 @@ TABLE_TEMPLATE['Metadata'] = (
 )
 
 COMMANDS = dict()
+
+# COMMAND list to push data to MySQL database.
+# Check entry existence
 COMMANDS['Check_Entry_Existence_Directory'] = (
     "SELECT EXISTS("
     "SELECT * "
@@ -39,6 +42,7 @@ COMMANDS['Check_Entry_Existence_Metadata'] = (
     ");"
 )
 
+# Insert entry
 COMMANDS['Insert_Directory'] = (
     "INSERT INTO Directory "
     "(CustomerName, Subdomain, Valid) "
@@ -49,12 +53,36 @@ COMMANDS['Insert_Metadata'] = (
     "(ToDate, InternalUsers, Subdomain) "
     "VALUES (%s, %s, %s)"
 )
+
+# Update certain field in entry
 COMMANDS['Update_Validity_Directory'] = (
     "UPDATE Directory "
     "SET Valid = 0 "
     "WHERE Subdomain = \"{0}\""
 )
 
+
+# Command list to pull data from MySQL database
+# Searches an entry by subdomain returning customerName, toDate, internalUsers, validity
+COMMANDS['Search_By_Subdomain'] = (
+    "SELECT Directory.CustomerName, Metadata.ToDate, Metadata.InternalUsers, Directory.Valid "
+    "FROM Directory "
+    "JOIN Metadata "
+    "ON Directory.Subdomain = Metadata.Subdomain "
+    "WHERE Directory.Subdomain = \"{0}\" "
+    "ORDER BY Metadata.ToDate ASC"
+)
+
+# Extracts all valid users present in most recent excel document
+COMMANDS['Search_Recent_Valid_Users'] = (
+    "SELECT Directory.CustomerName, Directory.Subdomain, Metadata.InternalUsers "
+    "FROM Directory "
+    "JOIN Metadata "
+    "ON Directory.Subdomain = Metadata.Subdomain "
+    "WHERE Directory.Valid = 1 "
+    "AND Metadata.ToDate = (SELECT MAX(ToDate) FROM Metadata) "
+    "ORDER BY Metadata.InternalUsers DESC;"
+)
 
 config = {
     'user': USERNAME,
