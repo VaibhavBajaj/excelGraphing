@@ -19,9 +19,9 @@
 
                 // Create the data table.
                 var data = new google.visualization.DataTable();
-                data.addColumn('string', 'Number of Internal Users');
+                data.addColumn('string', '{{field}}');
                 data.addColumn('number', 'Date');
-                data.addRows({{ internalUsers | safe }});
+                data.addRows({{ dataList | safe }});
                 // Set chart options
                 var options = {
                     'legend': 'left',

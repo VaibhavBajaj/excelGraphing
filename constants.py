@@ -17,8 +17,12 @@ TABLE_TEMPLATE['Metadata'] = (
     "CREATE TABLE Metadata ("
     "  Id INTEGER(11) NOT NULL AUTO_INCREMENT,"
     "  ToDate DATE NOT NULL,"      # Please see that "To_Date" is different from the excel field "To"
-    "  InternalUsers INTEGER(11) NOT NULL,"
     "  Subdomain VARCHAR(120) NOT NULL,"
+    "  InternalUsers     INTEGER(11) NOT NULL,"
+    "  InternalIncidents INTEGER(11) NOT NULL,"
+    "  ExternalIncidents INTEGER(11) NOT NULL,"
+    "  AuthoringActivity INTEGER(11) NOT NULL,"
+    "  TotalActiveNodes  INTEGER(11) NOT NULL,"
     "  PRIMARY KEY (Id)"
     ");"
 )
@@ -50,8 +54,8 @@ COMMANDS['Insert_Directory'] = (
 )
 COMMANDS['Insert_Metadata'] = (
     "INSERT INTO Metadata "
-    "(ToDate, InternalUsers, Subdomain) "
-    "VALUES (%s, %s, %s)"
+    "(ToDate, Subdomain, InternalUsers, InternalIncidents, ExternalIncidents, AuthoringActivity, TotalActiveNodes) "
+    "VALUES (%s, %s, %s, %s, %s, %s, %s)"
 )
 
 # Update certain field in entry
@@ -65,7 +69,7 @@ COMMANDS['Update_Validity_Directory'] = (
 # Command list to pull data from MySQL database
 # Searches an entry by subdomain returning customerName, toDate, internalUsers, validity
 COMMANDS['Search_By_Subdomain'] = (
-    "SELECT Directory.CustomerName, Metadata.ToDate, Metadata.InternalUsers, Directory.Valid "
+    "SELECT Directory.CustomerName, Metadata.ToDate, Metadata.{1}, Directory.Valid "
     "FROM Directory "
     "JOIN Metadata "
     "ON Directory.Subdomain = Metadata.Subdomain "
@@ -75,13 +79,36 @@ COMMANDS['Search_By_Subdomain'] = (
 
 # Extracts all valid users present in most recent excel document
 COMMANDS['Search_Recent_Valid_Users'] = (
-    "SELECT Directory.CustomerName, Directory.Subdomain, Metadata.InternalUsers "
+    "SELECT Directory.CustomerName, Directory.Subdomain, Metadata.InternalUsers, Metadata.InternalIncidents, "
+    "Metadata.ExternalIncidents, Metadata.AuthoringActivity, Metadata.TotalActiveNodes "
     "FROM Directory "
     "JOIN Metadata "
     "ON Directory.Subdomain = Metadata.Subdomain "
     "WHERE Directory.Valid = 1 "
     "AND Metadata.ToDate = (SELECT MAX(ToDate) FROM Metadata) "
     "ORDER BY Metadata.InternalUsers DESC;"
+)
+
+COMMANDS['Temp_Search_Recent_Valid_Users'] = (
+    "Select Directory.CustomerName, Directory.Subdomain, Metadata.ToDate, Metadata.InternalUsers, "
+    "Metadata.InternalIncidents, Metadata.ExternalIncidents, Metadata.AuthoringActivity, Metadata.TotalActiveNodes "
+    "FROM Directory "
+    "JOIN Metadata "
+    "ON Directory.Subdomain = Metadata.Subdomain "
+    "WHERE Directory.Valid = 1 "
+    "AND (Metadata.ToDate = (SELECT MAX(ToDate) FROM Metadata) "
+    "OR Metadata.ToDate = (SELECT ToDate FROM Metadata WHERE ToDate < (SELECT MAX(ToDate) FROM Metadata) "
+    "ORDER BY ToDate DESC LIMIT 1));"
+)
+
+COMMANDS['Reset_Validity'] = (
+    "UPDATE Directory "
+    "SET Valid = 0;"
+    "UPDATE Directory "
+    "JOIN Metadata "
+    "ON Directory.Subdomain = Metadata.Subdomain "
+    "SET Directory.Valid = 1 "
+    "WHERE Metadata.ToDate = (SELECT MAX(ToDate) FROM Metadata);"
 )
 
 config = {

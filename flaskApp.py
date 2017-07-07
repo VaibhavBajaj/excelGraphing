@@ -31,9 +31,32 @@ def default():
         dataList = []
         for data in cursor.fetchall():
             temp = re.match('https://([-\w]+).yonyx.com/y/login/', data[1])
-            targetDomain = temp.group(1)
-            dataList.append([data[0], data[1], data[2], targetDomain])
-            print(dataList)
+            subdomainPart = temp.group(1)
+
+            # For clarity, I am giving names to data array numbers
+            customerName = data[0]
+            subdomain = data[1]
+            internalUsers = data[2]
+            internalUserLink = 'http://127.0.0.1:8080/' + subdomainPart + '/InternalUsers/'
+            # data[3] = Internal incidents, data[4] = External Incidents
+            totalIncidents = data[3] + data[4]
+            totalIncidentsLink = 'http://127.0.0.1:8080/' + subdomainPart + '/TotalIncidents/'
+            authoringActivity = data[5]
+            authoringActivityLink = 'http://127.0.0.1:8080/' + subdomainPart + '/AuthoringActivity/'
+            totalActiveNodes = data[6]
+            totalActiveNodesLink = 'http://127.0.0.1:8080/' + subdomainPart + '/TotalActiveNodes/'
+            dataList.append([
+                customerName,
+                subdomain,
+                internalUsers,
+                internalUserLink,
+                totalIncidents,
+                totalIncidentsLink,
+                authoringActivity,
+                authoringActivityLink,
+                totalActiveNodes,
+                totalActiveNodesLink
+            ])
 
         return render_template(
             'usersTable.html',
@@ -43,12 +66,13 @@ def default():
 
 # Displays graph of user with subdomainPart in subdomain.
 # Here Subdomain --> https://sample.yonyx.com/y/login/ has subdomainPart --> sample
-@app.route("/<subdomainPart>", methods=['GET'])
-def graph(subdomainPart):
+@app.route("/<subdomainPart>/<field>/", methods=['GET'])
+def graph(subdomainPart, field):
     subdomain = "https://" + subdomainPart + ".yonyx.com/y/login/"
 
     customerName = 'Unknown'
-    internalUsers = []
+    dataList = []
+    secondaryDataList = []
     valid = "Invalid"
 
     # Opening mysql connection
@@ -66,17 +90,31 @@ def graph(subdomainPart):
         # Yipee! We connected
         print("MySQL connection successful.")
         cursor = connection.cursor(buffered=True)
-        cursor.execute(COMMANDS['Search_By_Subdomain'].format(subdomain))
-        for data in cursor.fetchall():
-            customerName = data[0]
-            internalUsers.append([datetime.strftime(data[1], '%m/%d/%Y'), data[2]])
-            valid = "Valid" if data[3] == 1 else "Invalid"
+        if (field != 'TotalIncidents'):
+            cursor.execute(COMMANDS['Search_By_Subdomain'].format(subdomain, field))
+            for data in cursor.fetchall():
+                customerName = data[0]
+                dataList.append([datetime.strftime(data[1], '%m/%d/%Y'), data[2]])
+                valid = "Valid" if data[3] == 1 else "Invalid"
+        else:
+            cursor.execute(COMMANDS['Search_By_Subdomain'].format(subdomain, 'InternalIncidents'))
+            for data in cursor.fetchall():
+                customerName = data[0]
+                dataList.append([datetime.strftime(data[1], '%m/%d/%Y'), data[2]])
+                valid = "Valid" if data[3] == 1 else "Invalid"
+            cursor.execute(COMMANDS['Search_By_Subdomain'].format(subdomain, 'ExternalIncidents'))
+            for data in cursor.fetchall():
+                secondaryDataList.append(data[2])
+
+            for i in range(len(secondaryDataList)):
+                dataList[i][1] += secondaryDataList[i]
 
         return render_template(
             'graphData.html',
             customerName=customerName,
             subdomain=subdomain,
-            internalUsers=internalUsers,
+            field=field,
+            dataList=dataList,
             valid=valid
         )
 
